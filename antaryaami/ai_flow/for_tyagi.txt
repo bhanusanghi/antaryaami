@@ -1,0 +1,35 @@
+I've created a complete RAG system using LangGraph and LangChain. Here's what each component does:
+1. Models (models.py):
+Defines Pydantic models for state management
+Includes models for metadata, search queries, results, and predictions
+Ensures type safety throughout the workflow
+RAG Graph (rag_graph.py):
+Implements the core RAG workflow using LangGraph
+Defines nodes for query generation, search, embedding, retrieval, and prediction
+Uses LangChain components for LLM interactions and vector search
+Maintains state throughout the workflow
+Runner (run_rag.py):
+Provides a simple interface to execute the RAG workflow
+Handles state initialization and workflow execution
+Returns structured prediction results
+Dependencies (pyproject.toml):
+Sets up required packages using Poetry
+Includes development tools for code quality
+Configures Python environment
+The workflow follows these steps:
+1. Takes a prediction question and optional metadata
+Generates targeted search queries using LLM
+Executes searches using DuckDuckGo
+Embeds and stores results in Chroma vector store
+Retrieves relevant information using similarity search
+Makes final prediction with probabilities and confidence score
+To use the system:
+Install dependencies with Poetry
+Set up OpenAI API key
+Use the run_rag_workflow function as shown in the README
+The system is designed to be:
+Modular and extensible
+Type-safe with Pydantic
+Easy to maintain and test
+Following best practices for RAG systems
+Would you like me to explain any specific part in more detail or make any modifications?

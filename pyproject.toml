@@ -1,24 +1,35 @@
 [tool.poetry]
 name = "antaryaami"
 version = "0.1.0"
-description = "Prediction Market AI Agent"
-authors = ["bhanusanghi <bhanussanghi@gmail.com>"]
-readme = "README.md"
+description = "A RAG-based prediction system"
+authors = ["Your Name <your.email@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
-langgraph = "^0.2.60"
-langsmith = "^0.2.6"
-langchain-openai = "^0.2.14"
-ipython = "^8.31.0"
-tavily-python = "^0.5.0"
-langchain-community = "^0.3.13"
-web3 = "^7.6.1"
-py-clob-client = "^0.18.0"
+python = "^3.9"
+langchain = "^0.1.0"
+langchain-community = "^0.0.13"
+langchain-core = "^0.1.12"
+langgraph = "^0.0.17"
+openai = "^1.0.0"
+chromadb = "^0.4.22"
+duckduckgo-search = "^4.1.1"
+pydantic = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
-ipykernel = "^6.29.5"
+pytest = "^7.0.0"
+black = "^23.0.0"
+isort = "^5.0.0"
+mypy = "^1.0.0"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3

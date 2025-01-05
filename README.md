@@ -1,79 +1,72 @@
-# Prediction Market AI Agent
+# Antaryaami RAG System
 
-A sophisticated AI agent built using LangChain and LangGraph frameworks to interact with and analyze prediction markets. This agent leverages large language models and blockchain integration to provide intelligent market analysis and interaction capabilities.
+A Retrieval-Augmented Generation (RAG) system for making predictions based on real-time information retrieval.
 
 ## Features
 
-- Built with LangChain for robust AI capabilities
-- Uses LangGraph for complex agent workflows and state management
-- Blockchain integration for interacting with prediction markets
-- Memory persistence and checkpointing
-- Tool-based architecture for extensible functionality
-
-## Prerequisites
-
-- Python 3.10+
-- Poetry for dependency management
-- Access to OpenRouter API
-- Web3 provider access (for blockchain interactions)
+- Query generation using LLMs
+- Multi-tool search capabilities (DuckDuckGo)
+- Vector store for efficient information retrieval (Chroma)
+- LangGraph-based workflow orchestration
+- Structured prediction output with probabilities and confidence scores
 
 ## Installation
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd lang-starter
-```
-
-2. Install Poetry (if not already installed):
+1. Install Poetry (if not already installed):
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-3. Install project dependencies:
+2. Install dependencies:
 ```bash
 poetry install
 ```
 
-4. Create a `.env` file in the project root and add your configuration:
+3. Set up environment variables:
 ```bash
-OPENAI_API_KEY=your_api_key_here
-WEB3_PROVIDER_URL=your_web3_provider_url
-PRIVATE_KEY=your_optional_private_key
+export OPENAI_API_KEY=your_openai_api_key
 ```
 
-## Setup Environment
+## Usage
 
-1. Activate the Poetry virtual environment:
-```bash
-poetry shell
+```python
+from antaryaami.ai_flow.run_rag import run_rag_workflow
+
+# Run a prediction
+result = run_rag_workflow(
+    question="Will Bitcoin reach $100,000 by the end of 2024?",
+    demographics={"region": "global", "market": "crypto"},
+    source="user_query"
+)
+
+# Access prediction
+if result.prediction:
+    print(f"Yes Probability: {result.prediction.yes_probability}")
+    print(f"No Probability: {result.prediction.no_probability}")
+    print(f"Confidence: {result.prediction.confidence_score}")
+    print(f"Reasoning: {result.prediction.reasoning}")
 ```
 
-2. Verify the installation:
-```bash
-poetry env info
-```
+## Architecture
 
-## Running the Project
+The system follows a graph-based workflow:
 
-[Add specific instructions for running your project here]
+1. Query Generation Node: Generates search queries based on the prediction question
+2. Search Node: Executes searches using configured tools
+3. Embedding Node: Processes and embeds search results
+4. Retrieval Node: Finds relevant information using vector similarity
+5. Prediction Node: Makes final prediction using LLM
 
 ## Development
 
-To add new dependencies:
-```bash
-poetry add package_name
-```
+- Format code: `poetry run black .`
+- Sort imports: `poetry run isort .`
+- Type checking: `poetry run mypy .`
+- Run tests: `poetry run pytest`
 
-To update dependencies:
-```bash
-poetry update
-```
+## License
 
-To run tests:
-```bash
-poetry run pytest
-```
+MIT License
 
 
 
