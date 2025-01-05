@@ -1,0 +1,47 @@
+
+
+1. Trading service
+
+- works with the prediction market's sdk
+- gets new markets
+- works with eoa pk key
+- manages trader activity on prediction market like placing bets etc
+- keeps a track of all existing trader activity
+- keeps track of open positions
+- keeps track of trading performance
+- keeps track of ->
+    the prediction accuracy against its predicted confidence
+
+- keeps trading highly configurable for example
+    - max money it can trade with
+    - max open interest
+    - max loss
+    - and many other props
+    - rate limits
+    - topics of interest (to filter markets to bet on)
+    - minimum confidence scores to work with
+
+
+Rules for open positions
+1. Everytime a position if open, we recheck our confidence of yes or no 
+
+
+- works with prediction market service
+- sends question to prediction service with an id
+- recieves prediciton of y or n with confidence scores
+- if confidence scores are over a certain threshold it figures out how much to bet based on the confidence score
+
+
+2. Prediction service
+RAG
+CRAG
+
+
+3. Online search tools
+- Search tools (duckduckgo, tavily, brave etc)
+- Social media search tools (tweepy, arcade-ai, meltwater api)
+
+4. DB
+pinecone ?
+or simply mongo with vector
+or pgsql + vector
