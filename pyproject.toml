@@ -2,18 +2,16 @@
 name = "antaryaami"
 version = "0.1.0"
 description = "A RAG-based prediction system"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["bhanu sanghi <bhanussanghi@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-langchain = "^0.1.0"
-langchain-community = "^0.0.13"
-langchain-core = "^0.1.12"
-langgraph = "^0.0.17"
-openai = "^1.0.0"
-chromadb = "^0.4.22"
-duckduckgo-search = "^4.1.1"
-pydantic = "^2.0.0"
+python = "^3.10"
+langchain = "^0.3.14"
+langgraph = "^0.2.60"
+openai = "^1.59.3"
+chromadb = "^0.6.1"
+duckduckgo-search = "^7.2.0"
+pydantic = "^2.10.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"
@@ -27,7 +25,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ['py310']
 include = '\.pyi?$'
 
 [tool.isort]

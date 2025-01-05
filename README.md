@@ -5,10 +5,11 @@ A Retrieval-Augmented Generation (RAG) system for making predictions based on re
 ## Features
 
 - Query generation using LLMs
-- Multi-tool search capabilities (DuckDuckGo)
+- Multi-tool search capabilities (DuckDuckGo, Brave, Tavily)
 - Vector store for efficient information retrieval (Chroma)
 - LangGraph-based workflow orchestration
 - Structured prediction output with probabilities and confidence scores
+- Pydantic models for data validation
 
 ## Installation
 
@@ -26,6 +27,8 @@ poetry install
 ```bash
 export OPENAI_API_KEY=your_openai_api_key
 ```
+
+4. or create a .env file from .env.example
 
 ## Usage
 

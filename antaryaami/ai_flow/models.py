@@ -39,7 +39,7 @@ class RAGState(BaseModel):
     """State maintained throughout the RAG workflow"""
 
     original_question: str
-    metadata: Metadata
+    metadata: Optional[Metadata] = None
     search_queries: Optional[List[SearchQuery]] = None
     search_results: Optional[List[SearchResult]] = None
     relevant_chunks: Optional[List[SearchResult]] = None
