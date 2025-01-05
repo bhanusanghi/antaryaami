@@ -9,6 +9,7 @@ def run_rag_workflow(
     question: str,
     demographics: Optional[Dict[str, Any]] = None,
     source: Optional[str] = None,
+    prediction_end_time: Optional[datetime] = None,
 ) -> RAGState:
     """
     Run the RAG workflow for a given prediction question
@@ -24,6 +25,7 @@ def run_rag_workflow(
     # Initialize state
     initial_state = RAGState(
         original_question=question,
+        prediction_end_time=prediction_end_time,
         metadata=Metadata(
             created_at=datetime.now(), demographics=demographics or {}, source=source
         ),

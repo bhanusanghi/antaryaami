@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional, Any
-from pydantic import BaseModel, Field
 from datetime import datetime
+from pydantic import BaseModel, Field, field_validator
 
 
 class Metadata(BaseModel):
@@ -9,6 +9,7 @@ class Metadata(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     demographics: Optional[Dict[str, Any]] = Field(default_factory=dict)
     source: Optional[str] = None
+    prediction_end_time: Optional[datetime] = None
 
 
 class SearchQuery(BaseModel):
@@ -17,6 +18,13 @@ class SearchQuery(BaseModel):
     query: str
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
+    @field_validator("query")
+    @classmethod
+    def validate_query(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Query cannot be empty")
+        return v.strip()
+
 
 class SearchResult(BaseModel):
     """Search result from various tools"""
@@ -24,6 +32,13 @@ class SearchResult(BaseModel):
     content: str
     source: str
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Content cannot be empty")
+        return v.strip()
 
 
 class PredictionResponse(BaseModel):
@@ -34,14 +49,48 @@ class PredictionResponse(BaseModel):
     confidence_score: float = Field(ge=0, le=1)
     reasoning: Optional[str] = None
 
+    @field_validator("yes_probability", "no_probability")
+    @classmethod
+    def validate_probabilities(cls, v: float) -> float:
+        return round(float(v), 4)  # Round to 4 decimal places
+
+    @field_validator("confidence_score")
+    @classmethod
+    def validate_confidence(cls, v: float) -> float:
+        return round(float(v), 4)  # Round to 4 decimal places
+
 
 class RAGState(BaseModel):
     """State maintained throughout the RAG workflow"""
 
     original_question: str
+    transformed_question: Optional[str] = None
     metadata: Optional[Metadata] = None
     search_queries: Optional[List[SearchQuery]] = None
     search_results: Optional[List[SearchResult]] = None
     relevant_chunks: Optional[List[SearchResult]] = None
     prediction: Optional[PredictionResponse] = None
     error: Optional[str] = None
+
+    def is_ready_for_search(self) -> bool:
+        """Check if state is ready for search phase"""
+        return bool(self.search_queries and len(self.search_queries) > 0)
+
+    def is_ready_for_embedding(self) -> bool:
+        """Check if state is ready for embedding phase"""
+        return bool(self.search_results and len(self.search_results) > 0)
+
+    def is_ready_for_prediction(self) -> bool:
+        """Check if state is ready for prediction phase"""
+        return bool(self.relevant_chunks and len(self.relevant_chunks) > 0)
+
+    def add_error(self, error_msg: str) -> None:
+        """Add error message to state"""
+        self.error = error_msg if not self.error else f"{self.error}; {error_msg}"
+
+    @field_validator("original_question")
+    @classmethod
+    def validate_question(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Question cannot be empty")
+        return v.strip()
