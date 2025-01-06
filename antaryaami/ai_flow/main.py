@@ -3,7 +3,7 @@ from antaryaami.ai_flow.run_rag import run_rag_workflow
 
 # Run a prediction
 result = run_rag_workflow(
-    question="Will Bitcoin reach $150,000 by the end of april 2025?",
+    question="Will Hyperliquid reach $50 by the end of april 2025?",
     demographics={"region": "global", "market": "crypto"},
     source="user_query",
     prediction_end_time=datetime(2025, 4, 30),

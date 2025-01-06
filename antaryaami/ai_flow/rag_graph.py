@@ -1,4 +1,5 @@
 # %%
+from datetime import datetime
 import os
 import json
 from typing import Annotated, Sequence, TypeVar
@@ -20,7 +21,7 @@ from rich import print as rprint
 from IPython.display import Image, display
 from langchain.tools import BaseTool
 from langchain_core.tools import tool
-from langchain.agents import AgentExecutor, create_structured_chat_agent
+from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.tools import Tool
 from langchain.agents.format_scratchpad import format_to_openai_function_messages
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
@@ -142,43 +143,31 @@ agent_prompt = ChatPromptTemplate.from_messages(
             "system",
             """You are a helpful assistant that uses search tools to find relevant information for making predictions.
     
-You have access to the following tool:
-- duckduckgo_search: Use for general web searches and recent information.
+            You have access to the following tool:
+            - duckduckgo_search: Use for general web searches and recent information.
 
-IMPORTANT: You MUST respond using this exact format:
-
-Thought: [your reasoning]
-Action: [tool name]
-Action Input: [tool input]
-
-tools: {tools}
-tool_names: {tool_names}
-
-DO NOT write explanations. execute a maximum of 3 searches to reach conclusion.""",
+            DO NOT write explanations. execute a maximum of 1 search to reach conclusion.""",
         ),
         ("human", "{input}"),
-        ("ai", "{agent_scratchpad}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
     ]
 )
 
-# Create the agent with structured output and proper message formatting
-agent = create_structured_chat_agent(
+# Create tool calling agent instead of structured chat agent
+agent = create_tool_calling_agent(
     llm=llm,
     tools=search_tools,
     prompt=agent_prompt,
 )
 
-# Create the agent executor with proper configuration for message handling
+# Update agent executor
 agent_executor = AgentExecutor(
     agent=agent,
     tools=search_tools,
     verbose=True,
     handle_parsing_errors=False,
-    max_iterations=2,  # Limit to one iteration
-    max_execution_time=30,  # Timeout after 30 seconds
-    agent_kwargs={
-        "format_scratchpad": format_to_openai_function_messages,
-    },
+    max_iterations=1,
+    max_execution_time=30,
 )
 
 # Initialize local vector store with persistence
@@ -269,6 +258,12 @@ def log_node_execution(node_name: str, state: RAGState, message: str = None):
 # %%
 
 
+# @todo -> this should also add relevant metadata. Like timeframe that might effect the question's search relevance. Add more dimensions to the question. Timeframe, region, market, etc. general scientific parameters if needed, analysis and tools for these analysis. Add all these dimenstions in the metadata.
+# Keep evolving this metadata over time. compare with historical data.
+# Find properties that would matter to this metadata.
+# this should generate a type of Pydantic class temporary and be used in next steps. (Huggingface smol ILY. looking forward to you for this)
+
+
 def transform_question(state: RAGState, config: RunnableConfig) -> RAGState:
     """Transform the original question into a search-optimized format"""
     log_node_execution(
@@ -329,39 +324,76 @@ def perform_search(state: RAGState, config: RunnableConfig) -> RAGState:
     results = []
     for query in state.search_queries:
         try:
-            # Create a search task for the agent
             task = f"""Search for information to help predict: {query.query}
             Focus on finding factual, relevant information that will help make an accurate prediction.
             """
 
-            # Execute agent with timeout and error handling
+            # Execute agent with tool calling
             agent_response = agent_executor.invoke(
-                {"input": task},
-                config={
-                    # "callbacks": None,
-                    "tags": ["search"],
+                {
+                    "input": task,
+                    "chat_history": [
+                        HumanMessage(content=state.original_question),
+                        AIMessage(content=f"Searching for: {query.query}"),
+                    ],
                 },
+                config={"tags": ["search"]},
             )
 
-            # Validate and extract search result
-            if "output" in agent_response:
-                search_result = SearchResult(
-                    content=str(agent_response["output"]),
-                    source="duckduckgo_search",
-                    metadata={"query": query.query},
-                )
-                results.append(search_result)
+            # Handle both normal output and timeout/iteration limit cases
+            if isinstance(agent_response, dict):
+                if "output" in agent_response:
+                    content = str(agent_response["output"])
+                elif "intermediate_steps" in agent_response:
+                    # Extract results from intermediate steps if available
+                    content = "\n".join(
+                        step[1]
+                        for step in agent_response["intermediate_steps"]
+                        if isinstance(step, tuple) and len(step) > 1
+                    )
+                else:
+                    content = "No results found"
+
+                if content and content != "No results found":
+                    search_result = SearchResult(
+                        content=content,
+                        source="duckduckgo_search",
+                        metadata={
+                            "query": query.query,
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                    )
+                    results.append(search_result)
             else:
                 console.print(
-                    f"[yellow]Warning: No output from search for query: {query.query}"
+                    f"[yellow]Warning: Unexpected response type for query: {query.query}"
                 )
 
         except Exception as e:
             console.print(f"[bold red]Error in search: {str(e)}")
-            # Don't fail the entire process for one failed search
+            # Try to extract any partial results from the error state
+            if hasattr(e, "intermediate_steps"):
+                try:
+                    content = "\n".join(
+                        step[1]
+                        for step in getattr(e, "intermediate_steps", [])
+                        if isinstance(step, tuple) and len(step) > 1
+                    )
+                    if content:
+                        search_result = SearchResult(
+                            content=content,
+                            source="duckduckgo_search",
+                            metadata={
+                                "query": query.query,
+                                "partial": True,
+                                "error": str(e),
+                            },
+                        )
+                        results.append(search_result)
+                except Exception:
+                    pass
             continue
 
-    # Update state with results if any were found
     if results:
         state.search_results = results
     else:
